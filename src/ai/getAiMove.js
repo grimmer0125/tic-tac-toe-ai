@@ -16,8 +16,8 @@ const net = getNetwork();
  * TODO: Find the best learning rates
  */
 const learningRates = {
-  invalidMove: 0.1,
-  validMove: 0.6,
+  invalidMove: 1, //0.1,
+  validMove: 1, //0.6,
   win: 1,
   lost: 0
 };
