@@ -29,7 +29,7 @@ const moveUserAndAi = (oldGame, position) => {
     console.log('auto restart-0-gameAfterMove !!!');
     setTimeout(() => {
       store.dispatch(newGame());
-      setTimeout(() => store.dispatch(askAiMove()), 1700);
+      // setTimeout(() => store.dispatch(askAiMove()), 1700);
     }, 2000);
   } else {
     setTimeout(() => {

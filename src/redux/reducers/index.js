@@ -9,8 +9,9 @@ const game = (state=initialGame, action) => {
   switch (action.type) {
     case actions.NEW_GAME:
       // return aiStart(state);
-      aiStart();
-      return getInitialGame(state);
+      const newState = getInitialGame(state);
+      aiStart(newState);
+      return newState;
     case actions.SELECT_POSITION:
       return moveUserAndAi(state, action.index);
     case actions.ASK_AI_MOVE:
