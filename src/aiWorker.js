@@ -3,12 +3,19 @@ import getAiMove from './ai/getAiMove';
 // eslint-disable-next-line
 onmessage = (e) => {
   console.log('worker receive onmessage:', e);
-  const oldGame = e.data;
-  const position = getAiMove(oldGame);
+  if (e.data === 'startTrain') {
+    console.log('ai receive start train');
 
-  console.log('worker return message:');
-  postMessage({
-    oldGame,
-    position
-  });
+    // TODO: Add Training part
+  } else {
+    const oldGame = e.data;
+    const position = getAiMove(oldGame);
+
+    console.log('worker return message:');
+    postMessage({
+      oldGame,
+      position
+    });
+  }
+
 };

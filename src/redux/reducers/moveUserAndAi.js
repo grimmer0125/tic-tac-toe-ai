@@ -5,9 +5,9 @@ import { isNil } from 'ramda';
 
 /**
  * Move
- * 
+ *
  * if NOT ended as AI to move
- * 
+ *
  * if ended create new game and ask ai to move
  * @param {*} oldGame state
  * @param {*} position index in the board to play
@@ -26,6 +26,7 @@ const moveUserAndAi = (oldGame, position) => {
   }
 
   if (gameAfterMove.ended) {
+    console.log('auto restart-0-gameAfterMove !!!');
     setTimeout(() => {
       store.dispatch(newGame());
       setTimeout(() => store.dispatch(askAiMove()), 1700);

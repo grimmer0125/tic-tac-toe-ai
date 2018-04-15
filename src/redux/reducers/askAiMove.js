@@ -21,6 +21,10 @@ if (typeof Worker === 'undefined') {
   };
 }
 
+export const askAIStartTrain = () => {
+  worker.postMessage('startTrain');
+};
+
 const askAiMove = (oldGame) => {
   if (isNil(worker)) {
     console.log('askAiMove-directly call');;

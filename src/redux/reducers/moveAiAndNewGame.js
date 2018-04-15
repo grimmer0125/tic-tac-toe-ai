@@ -4,6 +4,7 @@ import { newGame } from '../actions';
 import { equals, isNil } from 'ramda';
 
 const moveAiAndNewGame = (oldGame, data) => {
+  console.log('action moveAiAndNewGame');
   if (!equals(oldGame.board, data.oldGame.board)) {
     return oldGame;
   }
@@ -15,8 +16,8 @@ const moveAiAndNewGame = (oldGame, data) => {
   }
 
   if (gameAfterMove.ended) {
-    console.log('auto start new game');
-    setTimeout(() => store.dispatch(newGame()), 2000);
+    console.log('auto start1- new game');
+    setTimeout(() => store.dispatch(newGame()), 2*1000);
   }
 
   return gameAfterMove;

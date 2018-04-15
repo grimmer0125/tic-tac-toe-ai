@@ -5,6 +5,7 @@ import { Network, Layer } from 'synaptic';
  * @return {*} Neural Network
  */
 const getNetwork = () => {
+  console.log('init network');
   const inputLayer = new Layer(18);
   const hiddenLayer = new Layer(9);
   const outputLayer = new Layer(9);

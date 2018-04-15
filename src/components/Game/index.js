@@ -1,7 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { newGame, selectPosition } from '../../redux/actions';
+import { bindActionCreators } from 'redux';
+import { newGame, selectPosition, askStartTrain } from '../../redux/actions';
 import NewGameBtn from './NewGameBtn';
 import styled from 'styled-components';
 import Canvas from './Canvas';
@@ -26,7 +27,7 @@ const Score = styled.div`
   svg {
     font-size: ${({ theme }) => theme.scale(1)};
   }
-  
+
   span, svg {
     vertical-align: middle;
     display: inline-block;
@@ -34,7 +35,7 @@ const Score = styled.div`
 
   .points {
     font-size: ${({ theme }) => theme.scale(3)};
-    font-weight: bold;    
+    font-weight: bold;
     padding: 0 ${({ theme }) => theme.scale(-4)};
     top: 0.1rem;
     position: relative;
@@ -54,6 +55,11 @@ const getWinLostMsg = (game, forAi) => {
 };
 
 class Game extends React.PureComponent {
+
+  startTrain = () => {
+    console.log('start train !!');
+    this.props.askStartTrain();
+  }
 
   render() {
     const { game, selectPosition } = this.props;
@@ -76,6 +82,7 @@ class Game extends React.PureComponent {
         />
         <div>
           <NewGameBtn newGame={this.props.newGame} />
+          <button onClick={this.startTrain}>Start train</button>
         </div>
       </Section>
     );
@@ -101,7 +108,12 @@ const mapDispatchToProps = dispatch => {
     },
     selectPosition: index => {
       dispatch(selectPosition(index));
-    }
+    },
+
+    askStartTrain: () => {
+      dispatch(askStartTrain());
+    },
+    // askStartTrain: bindActionCreators(askStartTrain, dispatch),
   };
 };
 

@@ -1,3 +1,5 @@
+import { askAIStartTrain } from './reducers/askAiMove';
+
 const actions = {
   NEW_GAME: 'NEW_GAME',
   SELECT_POSITION: 'SELECT_POSITION',
@@ -5,12 +7,20 @@ const actions = {
   AI_MOVE: 'AI_MOVE'
 };
 
+function askStartTrain() {
+  return (dispatch, getState) => {
+    console.log('askStartTrain thunk');
+    askAIStartTrain();
+  };
+}
+
 /**
  * Create new game action.
  * @param {*} gameType game vs ai, game vc human
  * @returns {Action} new game action
  */
 const newGame = (gameType) => {
+  console.log('newgame !!!!:', gameType);
   return {
     type: actions.NEW_GAME,
     gameType
@@ -55,6 +65,7 @@ export {
   actions,
   aiMove,
   askAiMove,
-  newGame,  
-  selectPosition  
+  newGame,
+  selectPosition,
+  askStartTrain
 };
