@@ -1,7 +1,7 @@
 import getBoard from './getBoard';
 import { merge } from 'ramda';
 
-const initialGame = {
+export const initialGame = {
   board: getBoard(),
   ended: false,
   started: false,
@@ -17,11 +17,11 @@ const initialGame = {
 
 /**
  * Get initial game
- * 
+ *
  * if no oldGame: AI start
- * 
+ *
  * if AI started: user start
- * 
+ *
  * if user started: AI start
  * @param {*} oldGame oldGame to get aiStarted
  * @return {*} game

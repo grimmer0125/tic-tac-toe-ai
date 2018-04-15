@@ -15,6 +15,7 @@ const moveAiAndNewGame = (oldGame, data) => {
   }
 
   if (gameAfterMove.ended) {
+    console.log('auto start new game');
     setTimeout(() => store.dispatch(newGame()), 2000);
   }
 

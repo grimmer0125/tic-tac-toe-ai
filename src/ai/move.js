@@ -19,8 +19,10 @@ const getScore = (oldScore, winners, isMyTurn) => {
  * @param {Number} index position
  * @return {*} new game
  */
-const move = (oldGame, index) => {
+const move = (oldGame, index) => { //people move 也會進來但不會中斷
+  console.log('move-1');
   if (oldGame.ended) {
+    console.log('move-end');
     return oldGame;
   }
 
@@ -31,6 +33,8 @@ const move = (oldGame, index) => {
   const newBoard = setPosition(oldGame.board, index, newValue);
 
   if (isNil(newBoard)) {
+    console.log('move-nil');
+
     return null;
   }
 
@@ -40,7 +44,7 @@ const move = (oldGame, index) => {
 
   const ended = winners || nClicks > 7 ? true : false;
 
-  return {
+  const res = {
     board: newBoard,
     ended,
     started: true,
@@ -55,6 +59,10 @@ const move = (oldGame, index) => {
       }
       : oldGame.score
   };
+
+  // console.log('move-return:', res);
+
+  return res;
 };
 
 export default move;

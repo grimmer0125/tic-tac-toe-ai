@@ -17,8 +17,7 @@
   ],
   "license": "MIT",
   "main": "n/a",
-  "scripts": {
-    "prestart": "yarn run lint",
+  "scripts": {    
     "start": "yarn run develop",
     "lint": "./node_modules/.bin/eslint --fix --ext .js,.jsx --ignore-pattern public .",
     "build": "rm -rf public/*.html && gatsby build",

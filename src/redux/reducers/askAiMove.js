@@ -13,20 +13,25 @@ if (typeof Worker === 'undefined') {
 } else {
   // Yes! Web worker support!
   worker = new AiWorker();
+  console.log('new ai worker');
 
   worker.onmessage = (m) => {
+    console.log('ui thread receive onmessage-1');
     store.dispatch(aiMove(m.data));
   };
 }
 
 const askAiMove = (oldGame) => {
   if (isNil(worker)) {
-    const position = getAiMove(oldGame);
-    store.dispatch(aiMove({
-      oldGame,
-      position
-    }));
+    console.log('askAiMove-directly call');;
+
+    // const position = getAiMove(oldGame);
+    // store.dispatch(aiMove({
+    //   oldGame,
+    //   position
+    // }));
   } else {
+    console.log('askAiMove-ai worker post message');;
     worker.postMessage(oldGame);
   }
 
