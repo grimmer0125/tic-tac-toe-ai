@@ -24,9 +24,9 @@ let net = getNetwork();
  */
 const learningRates = {
   invalidMove: 0.1,
-  validMove: 0.5,
-  win: 1,
-  lost: 1
+  validMove: 0.3,
+  win: 0.3,
+  lost: 0.3
 };
 
 /**
@@ -51,7 +51,7 @@ const propagate2 = (net, learningRate, index, value) => {
   debug.log('propagate2, target index:', index);
   // const tt = getBoardArray(game); //
   // console.log('in propagate, 2nd arg, game target array(outputs):', tt); //[0,0,0,0,0,0,0,1,0]
-  const predict = Array(9).fill(0.5);
+  const predict = Array(9).fill(0);
   predict[index]=value;
   debug.log('predict:', predict);
   net.propagate(learningRate, predict); //(1 or 0.1, 0.6, ), 最新的已下的情形中, 修正的建議落子
@@ -75,7 +75,7 @@ const debug = (function () {
   };
 }());
 
-const numberOfTraing = 100;
+const numberOfTraing = 1000;
 
 export function startValidation() {
   console.log('start validation');
@@ -230,13 +230,13 @@ export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
 
         if(ifUserWin) {
           debug.log('train ai lose');
-          propagate2(net, learningRates.lost, nextStep, 0);
+          propagate2(net, learningRates.lost, nextStep, -1);
         } else if (ifAIWin){
           debug.log('train ai win');
           propagate2(net, learningRates.win, nextStep, 1);
         } else {
           debug.log('train a drew');
-          propagate2(net, learningRates.validMove, nextStep, 0.5);
+          propagate2(net, learningRates.validMove, nextStep, 0);
         }
       }
     }
