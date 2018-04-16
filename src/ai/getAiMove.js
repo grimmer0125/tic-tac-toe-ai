@@ -23,10 +23,10 @@ let net = getNetwork();
  * TODO: Find the best learning rates
  */
 const learningRates = {
-  invalidMove: 0.6, //0.1,
-  validMove: 0.6,
+  invalidMove: 0.1,
+  validMove: 0.5,
   win: 1,
-  lost: 0
+  lost: 1
 };
 
 /**
@@ -47,12 +47,12 @@ const propagate = (net, learningRate, game) => {
 // rnn
 // 問題 1. 重複的move,
 
-const propagate2 = (net, learningRate, index) => {
+const propagate2 = (net, learningRate, index, value) => {
   debug.log('propagate2, target index:', index);
   // const tt = getBoardArray(game); //
   // console.log('in propagate, 2nd arg, game target array(outputs):', tt); //[0,0,0,0,0,0,0,1,0]
-  const predict = Array(9).fill(0);
-  predict[index]=1;
+  const predict = Array(9).fill(0.5);
+  predict[index]=value;
   debug.log('predict:', predict);
   net.propagate(learningRate, predict); //(1 or 0.1, 0.6, ), 最新的已下的情形中, 修正的建議落子
 };
@@ -115,6 +115,9 @@ export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
     let gameAfterMove  = null;
     let numberOfInvalidMove = 0;
     let totalAISteps = 0;
+    let momentQueue = [];
+    let ifAIWin = false;
+    let ifUserWin = false;
     while(run) {
       if(uiGameObj.isAiTurn) {
 
@@ -131,7 +134,10 @@ export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
           console.log('wrong5, can not get getAiMove return');
           return;
         }
-        const {position, numberOfInvalid} = resp;
+
+        const {position, numberOfInvalid, gameMoment, nextStep} = resp;
+
+        momentQueue.push({gameMoment, nextStep});
 
         numberOfInvalidMove += numberOfInvalid;
         const data = deepcopy({
@@ -155,15 +161,24 @@ export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
           return;
           // return oldGame;
         }
-        uiGameObj = gameAfterMove;
-        if (uiGameObj.ended) {
+        if (gameAfterMove.ended) {
           console.log('final:ai. auto start1- new game');
+
+          const oldScore = uiGameObj.score.ai;
+          const newScore = gameAfterMove.score.ai;
+          if (newScore>oldScore) {
+            debug.log('ai wins');
+            ifAIWin = true;
+          }
 
           // setTimeout(() => store.dispatch(newGame()), 2*1000);
           // [done] TODO: New game. Add it later
           // return;
           run = false;
         }
+
+        uiGameObj = gameAfterMove;
+
         // console.log('wrong1');
         // return;
       } else {
@@ -178,15 +193,22 @@ export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
           console.log('wrong2');
           return;
         }
-        uiGameObj = gameAfterMove;
-        if (uiGameObj.ended) {
-          console.log('final:user. auto restart-0-gameAfterMove !!!');
+        if (gameAfterMove.ended) {
+          console.log('final:user. auto start new game');
           // console.log('final board:', getBoardArray(uiGameObj));
 
+          const oldScore = uiGameObj.score.human;
+          const newScore = gameAfterMove.score.human;
+          if (newScore>oldScore) {
+            debug.log('human wins');
+            ifUserWin = true;
+          }
           // [done] TODO: New game. Add it later
           // return;
           run = false;
         }
+        uiGameObj = gameAfterMove;
+
       }
     } //end of while(true)
     debug.log('final board:', getBoardArray(uiGameObj));
@@ -194,6 +216,46 @@ export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
       debug.log('invalid:', numberOfInvalidMove, ';per:', numberOfInvalidMove/totalAISteps);
     }
     totalInvalid += numberOfInvalidMove;
+
+    //** Start training
+    // momentQueue.push({gameMoment, nextStep});
+    if (ifTrain) {
+      console.log('train this round, ai steps:', momentQueue.length);
+      // console.log('momentQueue:', momentQueue);
+
+      for ( const moment of momentQueue) {
+        const {gameMoment, nextStep} = moment;
+        const input = getInputLayer(gameMoment.board);
+        net.activate(input);
+
+        if(ifUserWin) {
+          debug.log('train ai lose');
+          propagate2(net, learningRates.lost, nextStep, 0);
+        } else if (ifAIWin){
+          debug.log('train ai win');
+          propagate2(net, learningRates.win, nextStep, 1);
+        } else {
+          debug.log('train a drew');
+          propagate2(net, learningRates.validMove, nextStep, 0.5);
+        }
+      }
+    }
+
+    //     if (newScore>oldScore) {
+    //       propagate2(net, learningRates.win, position);//newGame);
+    //       debug.log('train for game win, ai index:', position);
+    //     } else {
+    //       propagate2(net, learningRates.validMove, position);//newGame);
+    //       debug.log('train for game ended, ai index:', position);
+    //     }
+    //
+    //     // position = index;
+    //   } else {
+    //     propagate2(net, learningRates.validMove, position);
+    //   }
+    // }
+
+    //** End of training
 
     //  merge舊的game的isAiTurn, aiStarted, score, 其他board全新等
     uiGameObj = getInitialGame(uiGameObj);
@@ -227,9 +289,6 @@ const getAiMove = (oldGame, forceRandomForTrain) => { //askaimove, 18, 9, 9
     return;
   }
 
-  const input = getInputLayer(oldGame.board); //18個elements, 現在已下的？, array
-  const output = net.activate(input); //下一步最佳解. 第一次都接近0.5的array, 9個
-  debug.log('input:', input, ';output:', output);
   let position = null;
   let numberOfInvalid = 0;
 
@@ -240,6 +299,9 @@ const getAiMove = (oldGame, forceRandomForTrain) => { //askaimove, 18, 9, 9
   if (!forceRandomForTrain) {
     const boardArrary = getBoardArray(oldGame);
     debug.log('board:', boardArrary);
+    const input = getInputLayer(oldGame.board); //18個elements, 現在已下的？, array
+    const output = net.activate(input); //下一步最佳解. 第一次都接近0.5的array, 9個
+    debug.log('input:', input, ';output:', output);
     const index = getPositionIndex(boardArrary, output); //找最大值所在的index
     debug.log('output from network predict: ai index:', index);
 
@@ -280,27 +342,14 @@ const getAiMove = (oldGame, forceRandomForTrain) => { //askaimove, 18, 9, 9
     // console.log('position is not null');
   }
 
-  if (forceRandomForTrain) {
-    const oldScore = oldGame.score.ai;
-    const newGame = move(oldGame, position);
-    const newScore = newGame.score.ai;
-    if (newGame && newGame.ended) {
-      debug.log('score:', oldScore, ';new:', newScore);
-      if (newScore>oldScore) {
-        propagate2(net, learningRates.win, position);//newGame);
-        debug.log('train for game win, ai index:', position);
-      } else {
-        propagate2(net, learningRates.validMove, position);//newGame);
-        debug.log('train for game ended, ai index:', position);
-      }
 
-      // position = index;
-    } else {
-      propagate2(net, learningRates.validMove, position);
-    }
-  }
 
-  return { position, numberOfInvalid };
+  // 要存 1. oldGame copy 2. 下一步location-index
+  // const input = getInputLayer(oldGame.board); //18個elements, 現在已下的？, array
+  // const output = net.activate(input);
+  const gameMoment = deepcopy(oldGame);
+
+  return { position, numberOfInvalid, gameMoment, nextStep: position};
 
 };
 
