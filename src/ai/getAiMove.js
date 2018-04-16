@@ -75,7 +75,7 @@ const debug = (function () {
   };
 }());
 
-const numberOfTraing = 5000;
+const numberOfTraing = 100;
 
 export function startValidation() {
   console.log('start validation');
@@ -157,7 +157,7 @@ export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
         }
         uiGameObj = gameAfterMove;
         if (uiGameObj.ended) {
-          console.log('winer:ai. auto start1- new game');
+          console.log('final:ai. auto start1- new game');
 
           // setTimeout(() => store.dispatch(newGame()), 2*1000);
           // [done] TODO: New game. Add it later
@@ -180,7 +180,7 @@ export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
         }
         uiGameObj = gameAfterMove;
         if (uiGameObj.ended) {
-          console.log('winer:user. auto restart-0-gameAfterMove !!!');
+          console.log('final:user. auto restart-0-gameAfterMove !!!');
           // console.log('final board:', getBoardArray(uiGameObj));
 
           // [done] TODO: New game. Add it later
@@ -281,10 +281,19 @@ const getAiMove = (oldGame, forceRandomForTrain) => { //askaimove, 18, 9, 9
   }
 
   if (forceRandomForTrain) {
+    const oldScore = oldGame.score.ai;
     const newGame = move(oldGame, position);
+    const newScore = newGame.score.ai;
     if (newGame && newGame.ended) {
-      propagate2(net, learningRates.win, position);//newGame);
-      debug.log('train for game ended, ai index:', position);
+      debug.log('score:', oldScore, ';new:', newScore);
+      if (newScore>oldScore) {
+        propagate2(net, learningRates.win, position);//newGame);
+        debug.log('train for game win, ai index:', position);
+      } else {
+        propagate2(net, learningRates.validMove, position);//newGame);
+        debug.log('train for game ended, ai index:', position);
+      }
+
       // position = index;
     } else {
       propagate2(net, learningRates.validMove, position);
