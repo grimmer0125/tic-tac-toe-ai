@@ -75,24 +75,26 @@ const debug = (function () {
   };
 }());
 
+const numberOfTraing = 5000;
+
 export function startValidation() {
   console.log('start validation');
-  startTrainOrValidation(false);
+  startTrainOrValidation(numberOfTraing, false);
 }
 
 export const startTrain = () => {
   console.log('start train');
-  startTrainOrValidation(true);
+  startTrainOrValidation(numberOfTraing, true);
 };
 
-export const startTrainOrValidation = (ifTrain) => {
+export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
 
   //1
   let uiGameObj = initialGame;
   // moveUserAndAi(uiGameObj, 隨機index);
 
   // const position = 0;
-  const numberOfRounds = 10;
+  // const numberOfRounds = numberOfTraing;
   let totalInvalid = 0;
   let startTime, endTime;
 
@@ -104,9 +106,9 @@ export const startTrainOrValidation = (ifTrain) => {
     // console.log('start user+ai run');
 
     if(uiGameObj.isAiTurn) {
-      console.log('ai first');
+      debug.log('ai first');
     } else {
-      console.log('user first');
+      debug.log('user first');
     }
 
     let run = true;
@@ -188,7 +190,9 @@ export const startTrainOrValidation = (ifTrain) => {
       }
     } //end of while(true)
     debug.log('final board:', getBoardArray(uiGameObj));
-    console.log('invalid:', numberOfInvalidMove, ';per:', numberOfInvalidMove/totalAISteps);
+    if(!ifTrain) {
+      debug.log('invalid:', numberOfInvalidMove, ';per:', numberOfInvalidMove/totalAISteps);
+    }
     totalInvalid += numberOfInvalidMove;
 
     //  merge舊的game的isAiTurn, aiStarted, score, 其他board全新等
@@ -234,7 +238,6 @@ const getAiMove = (oldGame, forceRandomForTrain) => { //askaimove, 18, 9, 9
 
   // Modified by Grimmer
   if (!forceRandomForTrain) {
-    console.log('not force train');
     const boardArrary = getBoardArray(oldGame);
     debug.log('board:', boardArrary);
     const index = getPositionIndex(boardArrary, output); //找最大值所在的index
@@ -277,13 +280,15 @@ const getAiMove = (oldGame, forceRandomForTrain) => { //askaimove, 18, 9, 9
     // console.log('position is not null');
   }
 
-  const newGame = move(oldGame, position);
-  if (newGame && newGame.ended) {
-    propagate2(net, learningRates.win, position);//newGame);
-    debug.log('train for game ended, ai index:', position);
-    // position = index;
-  } else {
-    propagate2(net, learningRates.validMove, position);
+  if (forceRandomForTrain) {
+    const newGame = move(oldGame, position);
+    if (newGame && newGame.ended) {
+      propagate2(net, learningRates.win, position);//newGame);
+      debug.log('train for game ended, ai index:', position);
+      // position = index;
+    } else {
+      propagate2(net, learningRates.validMove, position);
+    }
   }
 
   return { position, numberOfInvalid };
