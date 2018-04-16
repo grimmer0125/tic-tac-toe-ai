@@ -7,8 +7,8 @@ export const initialGame = {
   started: false,
   lastMove: null,
   winners: null,
-  isAiTurn: true,
-  aiStarted: true,
+  isAiTurn: false,
+  aiStarted: false,
   score: {
     ai: 0,
     human: 0
@@ -30,7 +30,7 @@ const getInitialGame = (oldGame) => {
   return oldGame
     ? merge(initialGame, {
       isAiTurn: !oldGame.aiStarted,
-      aiStarted: !oldGame.aiStarted,
+      aiStarted: !oldGame.aiStarted, 
       score: oldGame.score
     }, {})
     : initialGame;
