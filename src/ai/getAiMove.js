@@ -7,17 +7,19 @@ import { getRandomItem } from 'ptz-math';
 import getInputLayer from './getInputLayer';
 import getBoardArray from './getBoardArray';
 
+console.log('getNetwork()');
+
 /**
  * Neural Network
  */
-const net = getNetwork();
+let net = getNetwork();
 
 /**
  * TODO: Find the best learning rates
  */
 const learningRates = {
-  invalidMove: 1, //0.1,
-  validMove: 1, //0.6,
+  invalidMove: 0.6, //0.1,
+  validMove: 0.6,
   win: 1,
   lost: 0
 };
@@ -32,9 +34,9 @@ const learningRates = {
  */
 const propagate = (net, learningRate, game) => {
   console.log('getBoardArray:', game);
-  const tt = getBoardArray(game); //
-  console.log('in propagate, 2nd arg, game target array(outputs):', tt); //[0,0,0,0,0,0,0,1,0]
-  net.propagate(learningRate, tt); //(1 or 0.1, 0.6, ), 最新的已下的情形中, 修正的建議落子
+  const boardArrary = getBoardArray(game); //
+  console.log('in propagate, 2nd arg, game target array(outputs):', boardArrary); //[0,0,0,0,0,0,0,1,0]
+  net.propagate(learningRate, boardArrary); //(1 or 0.1, 0.6, ), 最新的已下的情形中, 修正的建議落子
 }; //game一開始就跑了三次
 // 可查a. 之前查的 q-learning, b. alphago. c. 另一個tic-ai, c. enhacne/refornacne training
 // rnn
@@ -51,7 +53,13 @@ const propagate2 = (net, learningRate, index) => {
 };
 
 export const startTrain = () => {
-  console.log('start Train');
+  console.log('start Train!!!!');
+
+  //模擬client的行為
+  // start->user選 or askaimove
+  // user 隨機選
+  // autostart game
+
 };
 
 /**
@@ -73,7 +81,9 @@ const getAiMove = (oldGame) => { //askaimove, 18, 9, 9
 
   console.log('input:', input, ';output:', output);
 
-  const index = getPositionIndex(output); //找最大值所在的index
+  // Modified by Grimmer
+  const boardArrary = getBoardArray(oldGame);
+  const index = getPositionIndex(boardArrary, output); //找最大值所在的index
   console.log('output from network predict: ai index:', index);
 
   const newGame = move(oldGame, index);
