@@ -65,72 +65,91 @@ export const startTrain = () => {
   // moveUserAndAi(uiGameObj, 隨機index);
 
   // const position = 0;
-  let run = true;
-  while(run) {
+  const numberOfRounds = 10;
+  console.log('start '+numberOfRounds.toString()+' rounds');
+
+  for (let i=0; i< numberOfRounds; i++) {
+    console.log((i+1).toString()+' th fake user vs ai round');
     console.log('start user+ai run');
+
     if(uiGameObj.isAiTurn) {
-      console.log('wrong1');
-      return;
-    }
-    const bestPositions = getBestPositions(uiGameObj);
-    const bestPosition = getRandomItem(bestPositions);
-    // const gameAfterBestMove = move(oldGame, bestPosition);
-    let gameAfterMove = move(uiGameObj, bestPosition);
-    if (isNil(gameAfterMove)) {
-      console.log('wrong2');
-      return;
-    }
-
-    uiGameObj = gameAfterMove;
-    if (uiGameObj.ended) {
-      console.log('winer:user. auto restart-0-gameAfterMove !!!');
-      console.log('final board:', getBoardArray(uiGameObj));
-
-      //TODO: New game. Add it later
-      return;
+      console.log('ai first');
     } else {
-      console.log('ask ai move');
-      // deep copy
-      // worker.postMessage(oldGame);
-      const copy = deepcopy(uiGameObj);
-      const position = getAiMove(copy);
-      console.log('worker return message:');
-      const data = deepcopy({
-        oldGame: copy,
-        position
-      });
-
-      // postMessage({
-      //   oldGame,
-      //   position
-      // });
-      // return moveAiAndNewGame(state || getInitialGame(), action.data);
-      if (!equals(uiGameObj.board, data.oldGame.board)) {
-        console.log('wrong3');
-        return;
-        // return oldGame;
-      }
-      gameAfterMove = moveAi(uiGameObj, data.position);
-      if (isNil(gameAfterMove)) {
-        console.log('wrong4');
-        return;
-        // return oldGame;
-      }
-      uiGameObj = gameAfterMove;
-      if (uiGameObj.ended) {
-        console.log('winer:ai. auto start1- new game, ai wins');
-        console.log('final board:', getBoardArray(uiGameObj));
-
-        // setTimeout(() => store.dispatch(newGame()), 2*1000);
-        //TODO: New game. Add it later
-        return;
-      }
-      // else {
-      //   // 重複模擬user輸入
-      // }
+      console.log('user first');
     }
-  }
 
+    let run = true;
+    let gameAfterMove  = null;
+    while(run) {
+      if(uiGameObj.isAiTurn) {
+
+        // ai part
+
+        // worker.postMessage(oldGame);
+        const copy = deepcopy(uiGameObj);
+        console.log('new ai step:', copy);
+
+        const position = getAiMove(copy);
+        const data = deepcopy({
+          oldGame: copy,
+          position
+        });
+        console.log('worker return message:', data);
+        // postMessage({
+        //   oldGame,
+        //   position
+        // });
+        // return moveAiAndNewGame(state || getInitialGame(), action.data);
+        if (!equals(uiGameObj.board, data.oldGame.board)) {
+          console.log('wrong3');
+          return;
+          // return oldGame;
+        }
+        gameAfterMove = moveAi(uiGameObj, data.position);
+        if (isNil(gameAfterMove)) {
+          console.log('wrong4');
+          return;
+          // return oldGame;
+        }
+        uiGameObj = gameAfterMove;
+        if (uiGameObj.ended) {
+          console.log('winer:ai. auto start1- new game, ai wins');
+
+          // setTimeout(() => store.dispatch(newGame()), 2*1000);
+          // [done] TODO: New game. Add it later
+          // return;
+          run = false;
+        }
+        // console.log('wrong1');
+        // return;
+      } else {
+        console.log('new user step');
+
+        // user part
+        const bestPositions = getBestPositions(uiGameObj);
+        const bestPosition = getRandomItem(bestPositions);
+        // const gameAfterBestMove = move(oldGame, bestPosition);
+        gameAfterMove = move(uiGameObj, bestPosition);
+        if (isNil(gameAfterMove)) {
+          console.log('wrong2');
+          return;
+        }
+        uiGameObj = gameAfterMove;
+        if (uiGameObj.ended) {
+          console.log('winer:user. auto restart-0-gameAfterMove !!!');
+          // console.log('final board:', getBoardArray(uiGameObj));
+
+          // [done] TODO: New game. Add it later
+          // return;
+          run = false;
+        }
+      }
+    } //end of while(true)
+    console.log('final board:', getBoardArray(uiGameObj));
+    console.log('total:', numberOfRounds, ';score:', uiGameObj.score);
+
+    uiGameObj = getInitialGame(uiGameObj);
+  }
 
   // copy post game object到這裡 getAiMove
 

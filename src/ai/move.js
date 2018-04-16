@@ -20,7 +20,7 @@ const getScore = (oldScore, winners, isMyTurn) => {
  * @return {*} new game
  */
 const move = (oldGame, index) => { //people move 也會進來但不會中斷
-  console.log('move-1');
+  // console.log('move-1');
   if (oldGame.ended) {
     console.log('move-end');
     return oldGame;
