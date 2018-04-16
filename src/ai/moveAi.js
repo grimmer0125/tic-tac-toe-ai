@@ -10,7 +10,7 @@ import { isNil } from 'ramda';
  * @return {*} new game
  */
 const moveAi = (oldGame, position) => {
-  console.log('moveAi');
+  // console.log('moveAi');
   if (isNil(oldGame) || !oldGame.isAiTurn) {
     console.log('ignore move');
     return oldGame;

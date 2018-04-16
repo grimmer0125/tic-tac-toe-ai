@@ -6,17 +6,21 @@ onmessage = (e) => {
   if (e.data === 'startTrain') {
     console.log('ai receive start train');
 
-    // TODO: Add Training part
     startTrain();
   } else {
     const oldGame = e.data;
-    const position = getAiMove(oldGame);
+    const resp = getAiMove(oldGame);
 
-    console.log('worker return message:');
-    postMessage({
-      oldGame,
-      position
-    });
+    if (resp) {
+      console.log('worker return message:');
+
+      postMessage({
+        oldGame,
+        position: resp.position
+      });
+    } else {
+      console.log('worker has something wrong');
+    }
   }
 
 };

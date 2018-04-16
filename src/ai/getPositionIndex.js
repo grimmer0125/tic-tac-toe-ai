@@ -1,5 +1,4 @@
 const getPositionIndex = (board, aiOutput) => {
-  console.log('board:', board);
   let bestIndex = -1;
   const total = aiOutput.length;
   for (let i=0; i< total;i++) {

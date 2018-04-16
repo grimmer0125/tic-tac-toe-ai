@@ -48,29 +48,50 @@ const propagate = (net, learningRate, game) => {
 // 問題 1. 重複的move,
 
 const propagate2 = (net, learningRate, index) => {
-  console.log('propagate2, target index:', index);
+  debug.log('propagate2, target index:', index);
   // const tt = getBoardArray(game); //
   // console.log('in propagate, 2nd arg, game target array(outputs):', tt); //[0,0,0,0,0,0,0,1,0]
   const predict = Array(9).fill(0);
   predict[index]=1;
-  console.log('predict:', predict);
+  debug.log('predict:', predict);
   net.propagate(learningRate, predict); //(1 or 0.1, 0.6, ), 最新的已下的情形中, 修正的建議落子
 };
 
+// from https://stackoverflow.com/questions/18746440/passing-multiple-arguments-to-console-log
+const debug = (function () {
+  return {
+    log() {
+      var args = Array.prototype.slice.call(arguments);
+      // console.log(...args);
+    },
+    warn() {
+      var args = Array.prototype.slice.call(arguments);
+      console.warn(...args);
+    },
+    error() {
+      var args = Array.prototype.slice.call(arguments);
+      console.error(...args);
+    }
+  };
+}());
+
 export const startTrain = () => {
-  console.log('start Train!!!!');
 
   //1
   let uiGameObj = initialGame;
   // moveUserAndAi(uiGameObj, 隨機index);
 
   // const position = 0;
-  const numberOfRounds = 10;
-  console.log('start '+numberOfRounds.toString()+' rounds');
+  const numberOfRounds = 500;
+  let totalInvalid = 0;
+  let startTime, endTime;
 
+  console.log('start train: '+numberOfRounds.toString()+' rounds');
+
+  startTime = new Date();
   for (let i=0; i< numberOfRounds; i++) {
     console.log((i+1).toString()+' th fake user vs ai round');
-    console.log('start user+ai run');
+    // console.log('start user+ai run');
 
     if(uiGameObj.isAiTurn) {
       console.log('ai first');
@@ -80,21 +101,32 @@ export const startTrain = () => {
 
     let run = true;
     let gameAfterMove  = null;
+    let numberOfInvalidMove = 0;
+    let totalAISteps = 0;
     while(run) {
       if(uiGameObj.isAiTurn) {
 
-        // ai part
+        // dlog('new ai step');
 
+        // ai part
+        totalAISteps++;
         // worker.postMessage(oldGame);
         const copy = deepcopy(uiGameObj);
-        console.log('new ai step:', copy);
+        // console.log('new ai step:', copy);
 
-        const position = getAiMove(copy);
+        const resp = getAiMove(copy);
+        if (!resp) {
+          console.log('wrong5, can not get getAiMove return');
+          return;
+        }
+        const {position, numberOfInvalid} = resp;
+
+        numberOfInvalidMove += numberOfInvalid;
         const data = deepcopy({
           oldGame: copy,
           position
         });
-        console.log('worker return message:', data);
+        // console.log('worker return message:', data);
         // postMessage({
         //   oldGame,
         //   position
@@ -123,7 +155,7 @@ export const startTrain = () => {
         // console.log('wrong1');
         // return;
       } else {
-        console.log('new user step');
+        debug.log('new user step');
 
         // user part
         const bestPositions = getBestPositions(uiGameObj);
@@ -146,10 +178,22 @@ export const startTrain = () => {
       }
     } //end of while(true)
     console.log('final board:', getBoardArray(uiGameObj));
-    console.log('total:', numberOfRounds, ';score:', uiGameObj.score);
+    console.log('invalid:', numberOfInvalidMove, ';per:', numberOfInvalidMove/totalAISteps);
+    totalInvalid += numberOfInvalidMove;
 
     uiGameObj = getInitialGame(uiGameObj);
   }
+
+  endTime = new Date();
+  let timeDiff = endTime - startTime; //in ms
+  // strip the ms
+  timeDiff /= 1000;
+  // get seconds
+  var seconds = Math.round(timeDiff);
+  console.log('train time:', seconds + ' seconds');
+
+  console.log('total:', numberOfRounds, ';score:', uiGameObj.score);
+  console.log('total invalid per:', totalInvalid/numberOfRounds);
 
   // copy post game object到這裡 getAiMove
 
@@ -172,52 +216,64 @@ export const startTrain = () => {
  * @return {Number} position index
  */
 const getAiMove = (oldGame) => { //askaimove, 18, 9, 9
-  console.log('getAiMove start, oldGame:', oldGame);
+  // const returnData = {position, numberOfInvalid: 0};
+  debug.log('getAiMove start, oldGame:', oldGame);
   if (isNil(oldGame)) {
     console.log('getAiMove return1');
-    return oldGame;
+    return;
   }
 
   const input = getInputLayer(oldGame.board); //18個elements, 現在已下的？, array
 
   const output = net.activate(input); //下一步最佳解. 第一次都接近0.5的array, 9個
 
-  console.log('input:', input, ';output:', output);
+  debug.log('input:', input, ';output:', output);
 
   // Modified by Grimmer
   const boardArrary = getBoardArray(oldGame);
+  debug.log('board:', boardArrary);
   const index = getPositionIndex(boardArrary, output); //找最大值所在的index
-  console.log('output from network predict: ai index:', index);
+  debug.log('output from network predict: ai index:', index);
 
   const newGame = move(oldGame, index);
 
+  let position = null;
+  let numberOfInvalid = 0;
+
+
   if (newGame && newGame.ended) {
     propagate2(net, learningRates.win, index);//newGame);
-    console.log('train for game ended, ai index:', index);
-    return index;
+    debug.log('train for game ended, ai index:', index);
+    position = index;
 
   } else {
 
     const bestPositions = getBestPositions(oldGame);
 
-    console.log('best Positions:', bestPositions);//可以下的地方
+    debug.log('best Positions:', bestPositions);//可以下的地方
     if (any(p => index === p, bestPositions)) {
       propagate2(net, learningRates.validMove, index);//newGame);
-      console.log('train for game, valid move, return ai index:', index);
+      debug.log('train for game, valid move, return ai index:', index);
 
-      return index;
+      position = index;
+      // return index;
 
     } else {
       const bestPosition = getRandomItem(bestPositions);
       const gameAfterBestMove = move(oldGame, bestPosition);
-      console.log('get newgame by using RandomItem:', bestPosition); //ai先, 我, ai這次就跑到這. 因為不能下上次的位置
+      debug.log('get newgame by using RandomItem:', bestPosition); //ai先, 我, ai這次就跑到這. 因為不能下上次的位置
       propagate2(net, learningRates.invalidMove, bestPosition);//gameAfterBestMove);
 
-      console.log('train for game, invalid move, return randomPosition:', bestPosition);
+      debug.log('train for game, invalid move, return randomPosition:', bestPosition);
 
-      return bestPosition;
+      position = bestPosition;
+      numberOfInvalid++;
+      // return bestPosition;
     }
   }
+
+  return {position, numberOfInvalid};
+
 };
 
 export default getAiMove;
