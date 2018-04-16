@@ -1,6 +1,6 @@
 import store from '../store';
 import { aiMove } from '../actions';
-import getAiMove from '../../ai/getAiMove';
+// import getAiMove from '../../ai/getAiMove';
 import { isNil } from 'ramda';
 
 // eslint-disable-next-line
