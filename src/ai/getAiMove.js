@@ -80,11 +80,15 @@ const numberOfTraing = 10000;
 export function startValidation() {
   console.log('start validation');
   startTrainOrValidation(numberOfTraing, false);
+  console.log('end validation');
+
 }
 
 export const startTrain = () => {
   console.log('start train');
   startTrainOrValidation(numberOfTraing, true);
+  console.log('end train');
+
 };
 
 export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
@@ -98,7 +102,7 @@ export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
   let totalInvalid = 0;
   let startTime, endTime;
 
-  console.log('start train, fake user vs ai round: '+numberOfRounds.toString()+' rounds');
+  console.log('start train/invalidate, fake user vs ai round: '+numberOfRounds.toString()+' rounds');
 
   startTime = new Date();
   for (let i=0; i< numberOfRounds; i++) {
@@ -272,7 +276,7 @@ export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
   console.log('total rounds:', numberOfRounds, ';score:', uiGameObj.score);
   console.log('average invalid per:', totalInvalid/numberOfRounds);
 
-  console.log('end Train!!!!');
+  console.log('end Train/invalidate!!!!');
 };
 
 /**
