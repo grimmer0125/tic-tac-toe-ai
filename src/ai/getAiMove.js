@@ -75,22 +75,27 @@ const debug = (function () {
   };
 }());
 
+function startValidation() {
+  console.log('start validation');
+}
+
 export const startTrain = () => {
+  console.log('start train');
 
   //1
   let uiGameObj = initialGame;
   // moveUserAndAi(uiGameObj, 隨機index);
 
   // const position = 0;
-  const numberOfRounds = 500;
+  const numberOfRounds = 10000;
   let totalInvalid = 0;
   let startTime, endTime;
 
-  console.log('start train: '+numberOfRounds.toString()+' rounds');
+  console.log('start train, fake user vs ai round: '+numberOfRounds.toString()+' rounds');
 
   startTime = new Date();
   for (let i=0; i< numberOfRounds; i++) {
-    console.log((i+1).toString()+' th fake user vs ai round');
+    console.log('Round:'+(i+1).toString());
     // console.log('start user+ai run');
 
     if(uiGameObj.isAiTurn) {
@@ -145,7 +150,7 @@ export const startTrain = () => {
         }
         uiGameObj = gameAfterMove;
         if (uiGameObj.ended) {
-          console.log('winer:ai. auto start1- new game, ai wins');
+          console.log('winer:ai. auto start1- new game');
 
           // setTimeout(() => store.dispatch(newGame()), 2*1000);
           // [done] TODO: New game. Add it later
@@ -177,7 +182,7 @@ export const startTrain = () => {
         }
       }
     } //end of while(true)
-    console.log('final board:', getBoardArray(uiGameObj));
+    debug.log('final board:', getBoardArray(uiGameObj));
     console.log('invalid:', numberOfInvalidMove, ';per:', numberOfInvalidMove/totalAISteps);
     totalInvalid += numberOfInvalidMove;
 
@@ -235,44 +240,48 @@ const getAiMove = (oldGame) => { //askaimove, 18, 9, 9
   const index = getPositionIndex(boardArrary, output); //找最大值所在的index
   debug.log('output from network predict: ai index:', index);
 
-  const newGame = move(oldGame, index);
 
   let position = null;
   let numberOfInvalid = 0;
 
 
-  if (newGame && newGame.ended) {
-    propagate2(net, learningRates.win, index);//newGame);
-    debug.log('train for game ended, ai index:', index);
+  // } else {
+
+  const bestPositions = getBestPositions(oldGame);
+
+  debug.log('best Positions:', bestPositions);//可以下的地方
+  if (any(p => index === p, bestPositions)) {
     position = index;
 
+    debug.log('train for game, valid move, return ai index:', index);
+
+    // propagate2(net, learningRates.validMove, index);//newGame);
+    // return index;
+
   } else {
+    const bestPosition = getRandomItem(bestPositions);
 
-    const bestPositions = getBestPositions(oldGame);
+    // const gameAfterBestMove = move(oldGame, bestPosition);
 
-    debug.log('best Positions:', bestPositions);//可以下的地方
-    if (any(p => index === p, bestPositions)) {
-      propagate2(net, learningRates.validMove, index);//newGame);
-      debug.log('train for game, valid move, return ai index:', index);
+    position = bestPosition;
+    debug.log('get newgame by using RandomItem:', bestPosition); //ai先, 我, ai這次就跑到這. 因為不能下上次的位置
 
-      position = index;
-      // return index;
-
-    } else {
-      const bestPosition = getRandomItem(bestPositions);
-      const gameAfterBestMove = move(oldGame, bestPosition);
-      debug.log('get newgame by using RandomItem:', bestPosition); //ai先, 我, ai這次就跑到這. 因為不能下上次的位置
-      propagate2(net, learningRates.invalidMove, bestPosition);//gameAfterBestMove);
-
-      debug.log('train for game, invalid move, return randomPosition:', bestPosition);
-
-      position = bestPosition;
-      numberOfInvalid++;
-      // return bestPosition;
-    }
+    // propagate2(net, learningRates.invalidMove, bestPosition);//gameAfterBestMove);
+    debug.log('train for game, invalid move, return randomPosition:', bestPosition);
+    numberOfInvalid++;
+    // return bestPosition;
   }
 
-  return {position, numberOfInvalid};
+  const newGame = move(oldGame, position);
+  if (newGame && newGame.ended) {
+    propagate2(net, learningRates.win, position);//newGame);
+    debug.log('train for game ended, ai index:', position);
+    // position = index;
+  } else {
+    propagate2(net, learningRates.validMove, position);
+  }
+
+  return { position, numberOfInvalid };
 
 };
 

@@ -4,7 +4,6 @@ import getAiMove, { startTrain } from './ai/getAiMove';
 onmessage = (e) => {
   console.log('worker receive onmessage:', e);
   if (e.data === 'startTrain') {
-    console.log('ai receive start train');
 
     startTrain();
   } else {
