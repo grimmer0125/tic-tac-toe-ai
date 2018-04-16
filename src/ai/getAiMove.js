@@ -75,7 +75,7 @@ const debug = (function () {
   };
 }());
 
-const numberOfTraing = 1000;
+const numberOfTraing = 10000;
 
 export function startValidation() {
   console.log('start validation');
