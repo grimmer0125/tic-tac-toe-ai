@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { newGame, selectPosition, askStartTrain } from '../../redux/actions';
+import { newGame, selectPosition, askStartTrain, askStartValidate } from '../../redux/actions';
 import NewGameBtn from './NewGameBtn';
 import styled from 'styled-components';
 import Canvas from './Canvas';
@@ -61,6 +61,11 @@ class Game extends React.PureComponent {
     this.props.askStartTrain();
   }
 
+  startValidate = () => {
+    console.log('startValidate !!');
+    this.props.askStartValidate();
+  }
+
   render() {
     const { game, selectPosition } = this.props;
 
@@ -83,6 +88,8 @@ class Game extends React.PureComponent {
         <div>
           <NewGameBtn newGame={this.props.newGame} />
           <button onClick={this.startTrain}>Start train</button>
+          <button onClick={this.startValidate}>Start validate</button>
+
         </div>
       </Section>
     );
@@ -112,6 +119,10 @@ const mapDispatchToProps = dispatch => {
 
     askStartTrain: () => {
       dispatch(askStartTrain());
+    },
+
+    askStartValidate: () => {
+      dispatch(askStartValidate());
     },
     // askStartTrain: bindActionCreators(askStartTrain, dispatch),
   };

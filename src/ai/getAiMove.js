@@ -75,19 +75,24 @@ const debug = (function () {
   };
 }());
 
-function startValidation() {
+export function startValidation() {
   console.log('start validation');
+  startTrainOrValidation(false);
 }
 
 export const startTrain = () => {
   console.log('start train');
+  startTrainOrValidation(true);
+};
+
+export const startTrainOrValidation = (ifTrain) => {
 
   //1
   let uiGameObj = initialGame;
   // moveUserAndAi(uiGameObj, 隨機index);
 
   // const position = 0;
-  const numberOfRounds = 10000;
+  const numberOfRounds = 10;
   let totalInvalid = 0;
   let startTime, endTime;
 
@@ -119,7 +124,7 @@ export const startTrain = () => {
         const copy = deepcopy(uiGameObj);
         // console.log('new ai step:', copy);
 
-        const resp = getAiMove(copy);
+        const resp = getAiMove(copy, ifTrain);
         if (!resp) {
           console.log('wrong5, can not get getAiMove return');
           return;
@@ -186,6 +191,7 @@ export const startTrain = () => {
     console.log('invalid:', numberOfInvalidMove, ';per:', numberOfInvalidMove/totalAISteps);
     totalInvalid += numberOfInvalidMove;
 
+    //  merge舊的game的isAiTurn, aiStarted, score, 其他board全新等
     uiGameObj = getInitialGame(uiGameObj);
   }
 
@@ -197,19 +203,8 @@ export const startTrain = () => {
   var seconds = Math.round(timeDiff);
   console.log('train time:', seconds + ' seconds');
 
-  console.log('total:', numberOfRounds, ';score:', uiGameObj.score);
-  console.log('total invalid per:', totalInvalid/numberOfRounds);
-
-  // copy post game object到這裡 getAiMove
-
-  // 模擬user ui的行為 100次好了 (ui<->worker, board data用copy)
-  // start->user選 or askaimove
-  // user 隨機選. ai選, ai選完post回ui的地方要模擬 moveAiAndNewGame->moveAi (<-可能會trigger restart)
-  // autostart game
-
-  // 現在是一開始人選接著叫ai動: moveUserAndAi (<-可能會trigger restart)
-  // restart game: newGame()-> merge舊的isAiTurn, aiStarted, score, 其他board全新等
-  //    可能ai會當第一個, askAiMove(如果aiturn是true)
+  console.log('total rounds:', numberOfRounds, ';score:', uiGameObj.score);
+  console.log('average invalid per:', totalInvalid/numberOfRounds);
 
   console.log('end Train!!!!');
 };
@@ -220,7 +215,7 @@ export const startTrain = () => {
  * @param {Game} oldGame game
  * @return {Number} position index
  */
-const getAiMove = (oldGame) => { //askaimove, 18, 9, 9
+const getAiMove = (oldGame, forceRandomForTrain) => { //askaimove, 18, 9, 9
   // const returnData = {position, numberOfInvalid: 0};
   debug.log('getAiMove start, oldGame:', oldGame);
   if (isNil(oldGame)) {
@@ -229,36 +224,45 @@ const getAiMove = (oldGame) => { //askaimove, 18, 9, 9
   }
 
   const input = getInputLayer(oldGame.board); //18個elements, 現在已下的？, array
-
   const output = net.activate(input); //下一步最佳解. 第一次都接近0.5的array, 9個
-
   debug.log('input:', input, ';output:', output);
-
-  // Modified by Grimmer
-  const boardArrary = getBoardArray(oldGame);
-  debug.log('board:', boardArrary);
-  const index = getPositionIndex(boardArrary, output); //找最大值所在的index
-  debug.log('output from network predict: ai index:', index);
-
-
   let position = null;
   let numberOfInvalid = 0;
 
+  const bestPositions = getBestPositions(oldGame);
+  debug.log('best Positions:', bestPositions);//可以下的地方
 
+  // Modified by Grimmer
+  if (!forceRandomForTrain) {
+    console.log('not force train');
+    const boardArrary = getBoardArray(oldGame);
+    debug.log('board:', boardArrary);
+    const index = getPositionIndex(boardArrary, output); //找最大值所在的index
+    debug.log('output from network predict: ai index:', index);
+
+    if (any(p => index === p, bestPositions)) {
+      position = index;
+      debug.log('train for game, valid move, return ai index:', index);
+    } else {
+      numberOfInvalid++;
+      debug.log('invalid move');
+    }
+  }
+
+  if (!position) {
+
+  // }
+  //
+  // if (any(p => index === p, bestPositions)) {
+  //   position = index;
+  //
+  //   debug.log('train for game, valid move, return ai index:', index);
+  //
+  //   // propagate2(net, learningRates.validMove, index);//newGame);
+  //   // return index;
+  //
   // } else {
 
-  const bestPositions = getBestPositions(oldGame);
-
-  debug.log('best Positions:', bestPositions);//可以下的地方
-  if (any(p => index === p, bestPositions)) {
-    position = index;
-
-    debug.log('train for game, valid move, return ai index:', index);
-
-    // propagate2(net, learningRates.validMove, index);//newGame);
-    // return index;
-
-  } else {
     const bestPosition = getRandomItem(bestPositions);
 
     // const gameAfterBestMove = move(oldGame, bestPosition);
@@ -267,9 +271,10 @@ const getAiMove = (oldGame) => { //askaimove, 18, 9, 9
     debug.log('get newgame by using RandomItem:', bestPosition); //ai先, 我, ai這次就跑到這. 因為不能下上次的位置
 
     // propagate2(net, learningRates.invalidMove, bestPosition);//gameAfterBestMove);
-    debug.log('train for game, invalid move, return randomPosition:', bestPosition);
-    numberOfInvalid++;
+    // debug.log('train for game, invalid move, return randomPosition:', bestPosition);
     // return bestPosition;
+  } else {
+    // console.log('position is not null');
   }
 
   const newGame = move(oldGame, position);

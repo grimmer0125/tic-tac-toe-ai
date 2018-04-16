@@ -1,4 +1,4 @@
-import { askAIStartTrain } from './reducers/askAiMove';
+import { askAIStartTrain, askAIStartValidate } from './reducers/askAiMove';
 
 const actions = {
   NEW_GAME: 'NEW_GAME',
@@ -6,6 +6,13 @@ const actions = {
   ASK_AI_MOVE: 'ASK_AI_MOVE',
   AI_MOVE: 'AI_MOVE'
 };
+
+function askStartValidate() {
+  return (dispatch, getState) => {
+    console.log('askStartValidate thunk');
+    askAIStartValidate();
+  };
+}
 
 function askStartTrain() {
   return (dispatch, getState) => {
@@ -67,5 +74,6 @@ export {
   askAiMove,
   newGame,
   selectPosition,
-  askStartTrain
+  askStartTrain,
+  askStartValidate
 };

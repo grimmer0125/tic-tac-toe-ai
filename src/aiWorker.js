@@ -1,4 +1,4 @@
-import getAiMove, { startTrain } from './ai/getAiMove';
+import getAiMove, { startTrain, startValidation } from './ai/getAiMove';
 
 // eslint-disable-next-line
 onmessage = (e) => {
@@ -6,6 +6,8 @@ onmessage = (e) => {
   if (e.data === 'startTrain') {
 
     startTrain();
+  } else if (e.data === 'startValidation') {
+    startValidation();
   } else {
     const oldGame = e.data;
     const resp = getAiMove(oldGame);

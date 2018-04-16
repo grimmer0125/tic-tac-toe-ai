@@ -21,6 +21,10 @@ if (typeof Worker === 'undefined') {
   };
 }
 
+export const askAIStartValidate = () => {
+  worker.postMessage('startValidation');
+};
+
 export const askAIStartTrain = () => {
   worker.postMessage('startTrain');
 };
