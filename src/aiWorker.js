@@ -1,4 +1,4 @@
-import getAiMove from './ai/getAiMove';
+import getAiMove, { startTrain } from './ai/getAiMove';
 
 // eslint-disable-next-line
 onmessage = (e) => {
@@ -7,6 +7,7 @@ onmessage = (e) => {
     console.log('ai receive start train');
 
     // TODO: Add Training part
+    startTrain();
   } else {
     const oldGame = e.data;
     const position = getAiMove(oldGame);

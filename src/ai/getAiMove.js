@@ -2,10 +2,15 @@ import getBestPositions from './getBestPositions';
 import getNetwork from './getNetwork';
 import getPositionIndex from './getPositionIndex';
 import move from './move';
-import { any, isNil } from 'ramda';
+import { equals, any, isNil } from 'ramda';
 import { getRandomItem } from 'ptz-math';
 import getInputLayer from './getInputLayer';
 import getBoardArray from './getBoardArray';
+
+import getInitialGame, {initialGame} from './getInitialGame';
+// import moveUserAndAi from '../redux/reducers/moveUserAndAi';
+import deepcopy from 'deepcopy';
+import moveAi from './moveAi';
 
 console.log('getNetwork()');
 
@@ -55,11 +60,90 @@ const propagate2 = (net, learningRate, index) => {
 export const startTrain = () => {
   console.log('start Train!!!!');
 
-  //模擬client的行為
+  //1
+  let uiGameObj = initialGame;
+  // moveUserAndAi(uiGameObj, 隨機index);
+
+  // const position = 0;
+  let run = true;
+  while(run) {
+    console.log('start user+ai run');
+    if(uiGameObj.isAiTurn) {
+      console.log('wrong1');
+      return;
+    }
+    const bestPositions = getBestPositions(uiGameObj);
+    const bestPosition = getRandomItem(bestPositions);
+    // const gameAfterBestMove = move(oldGame, bestPosition);
+    let gameAfterMove = move(uiGameObj, bestPosition);
+    if (isNil(gameAfterMove)) {
+      console.log('wrong2');
+      return;
+    }
+
+    uiGameObj = gameAfterMove;
+    if (uiGameObj.ended) {
+      console.log('winer:user. auto restart-0-gameAfterMove !!!');
+      console.log('final board:', getBoardArray(uiGameObj));
+
+      //TODO: New game. Add it later
+      return;
+    } else {
+      console.log('ask ai move');
+      // deep copy
+      // worker.postMessage(oldGame);
+      const copy = deepcopy(uiGameObj);
+      const position = getAiMove(copy);
+      console.log('worker return message:');
+      const data = deepcopy({
+        oldGame: copy,
+        position
+      });
+
+      // postMessage({
+      //   oldGame,
+      //   position
+      // });
+      // return moveAiAndNewGame(state || getInitialGame(), action.data);
+      if (!equals(uiGameObj.board, data.oldGame.board)) {
+        console.log('wrong3');
+        return;
+        // return oldGame;
+      }
+      gameAfterMove = moveAi(uiGameObj, data.position);
+      if (isNil(gameAfterMove)) {
+        console.log('wrong4');
+        return;
+        // return oldGame;
+      }
+      uiGameObj = gameAfterMove;
+      if (uiGameObj.ended) {
+        console.log('winer:ai. auto start1- new game, ai wins');
+        console.log('final board:', getBoardArray(uiGameObj));
+
+        // setTimeout(() => store.dispatch(newGame()), 2*1000);
+        //TODO: New game. Add it later
+        return;
+      }
+      // else {
+      //   // 重複模擬user輸入
+      // }
+    }
+  }
+
+
+  // copy post game object到這裡 getAiMove
+
+  // 模擬user ui的行為 100次好了 (ui<->worker, board data用copy)
   // start->user選 or askaimove
-  // user 隨機選
+  // user 隨機選. ai選, ai選完post回ui的地方要模擬 moveAiAndNewGame->moveAi (<-可能會trigger restart)
   // autostart game
 
+  // 現在是一開始人選接著叫ai動: moveUserAndAi (<-可能會trigger restart)
+  // restart game: newGame()-> merge舊的isAiTurn, aiStarted, score, 其他board全新等
+  //    可能ai會當第一個, askAiMove(如果aiturn是true)
+
+  console.log('end Train!!!!');
 };
 
 /**
