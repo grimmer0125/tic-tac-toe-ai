@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "author": "",
   "dependencies": {
+    "@tensorflow/tfjs": "^0.9.1",
     "deepcopy": "^0.6.3",
     "gatsby": "^1.9.55",
     "gatsby-link": "^1.6.20",
