@@ -12,7 +12,28 @@ import getInitialGame, {initialGame} from './getInitialGame';
 import deepcopy from 'deepcopy';
 import moveAi from './moveAi';
 
+import * as tensor from './tensor';
+
 console.log('getNetwork()');
+
+
+// from https://stackoverflow.com/questions/18746440/passing-multiple-arguments-to-console-log
+export const debug = (function () {
+  return {
+    log() {
+      var args = Array.prototype.slice.call(arguments);
+      // console.log(...args);
+    },
+    warn() {
+      var args = Array.prototype.slice.call(arguments);
+      console.warn(...args);
+    },
+    error() {
+      var args = Array.prototype.slice.call(arguments);
+      console.error(...args);
+    }
+  };
+}());
 
 /**
  * Neural Network
@@ -51,49 +72,37 @@ const propagate2 = (net, learningRate, index, value) => {
   debug.log('propagate2, target index:', index);
   // const tt = getBoardArray(game); //
   // console.log('in propagate, 2nd arg, game target array(outputs):', tt); //[0,0,0,0,0,0,0,1,0]
-  const predict = Array(9).fill(0);
-  predict[index]=value;
-  debug.log('predict:', predict);
-  net.propagate(learningRate, predict); //(1 or 0.1, 0.6, ), 最新的已下的情形中, 修正的建議落子
+  const target = Array(9).fill(0);
+  target[index]=value;
+  debug.log('target:', target);
+  net.propagate(learningRate, target); //(1 or 0.1, 0.6, ), 最新的已下的情形中, 修正的建議落子
 };
 
-// from https://stackoverflow.com/questions/18746440/passing-multiple-arguments-to-console-log
-const debug = (function () {
-  return {
-    log() {
-      var args = Array.prototype.slice.call(arguments);
-      // console.log(...args);
-    },
-    warn() {
-      var args = Array.prototype.slice.call(arguments);
-      console.warn(...args);
-    },
-    error() {
-      var args = Array.prototype.slice.call(arguments);
-      console.error(...args);
-    }
-  };
-}());
 
-const numberOfTraing = 10000;
+
+const numberOfTraing = 5*10000;
 
 export function startValidation() {
   console.log('start validation');
+  // startTrainOrValidation(Math.floor(numberOfTraing/4), false);
   startTrainOrValidation(numberOfTraing, false);
   console.log('end validation');
-  const exported = net.toJSON();
-  console.log('print exported network as json data:\n');
-  console.log(JSON.stringify(exported));
 
+  // const exported = net.toJSON();
+  // console.log('print exported network as json data:\n');
+  // console.log(JSON.stringify(exported));
 }
 
-export const startTrain = () => {
-  console.log('start train');
-  startTrainOrValidation(numberOfTraing, true);
-  console.log('end train');
+
+export const startTrain = async () => {
+  console.log('start self-play train');
+  await startTrainOrValidation(numberOfTraing, true);
+  console.log('end self-play train');
 };
 
-export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
+export const startTrainOrValidation = async (numberOfRounds, ifTrain) => {
+
+  tensor.setModel();
 
   //1
   let uiGameObj = initialGame;
@@ -231,22 +240,36 @@ export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
       debug.log('train this round, ai steps:', momentQueue.length);
       // console.log('momentQueue:', momentQueue);
 
+      // Tensorflow part
+      const trainXSet = [];
+      const trainYSet = [];
+
       for ( const moment of momentQueue) {
         const {gameMoment, nextStep} = moment;
         const input = getInputLayer(gameMoment.board);
-        net.activate(input);
 
+        trainXSet.push(input);
+        // net.activate(input);
+
+        let value;
         if(ifUserWin) {
           debug.log('train ai lose');
-          propagate2(net, learningRates.lost, nextStep, -1);
+          value = -1;
+          // propagate2(net, learningRates.lost, nextStep, -1);
         } else if (ifAIWin){
           debug.log('train ai win');
-          propagate2(net, learningRates.win, nextStep, 1);
+          value = 1;
+          // propagate2(net, learningRates.win, nextStep, 1);
         } else {
-          debug.log('train a drew');
-          propagate2(net, learningRates.validMove, nextStep, 0);
+          debug.log('train a draw');
+          value = 0;
+          // propagate2(net, learningRates.validMove, nextStep, 0);
         }
+        trainYSet.push(tensor.wrapLabelData(nextStep, value));
       }
+
+      await tensor.trainData(trainXSet, trainYSet);
+
     }
 
     //     if (newScore>oldScore) {
@@ -308,7 +331,9 @@ const getAiMove = (oldGame, forceRandomForTrain) => { //askaimove, 18, 9, 9
     const boardArrary = getBoardArray(oldGame);
     debug.log('board:', boardArrary);
     const input = getInputLayer(oldGame.board); //18個elements, 現在已下的？, array
-    const output = net.activate(input); //下一步最佳解. 第一次都接近0.5的array, 9個
+    //const output = net.activate(input); //下一步最佳解. 第一次都接近0.5的array, 9個
+    // Tensorflow part:
+    const output = tensor.getPrediction(input);
     debug.log('input:', input, ';output:', output);
     const index = getPositionIndex(boardArrary, output); //找最大值所在的index
     debug.log('output from network predict: ai index:', index);
