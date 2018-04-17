@@ -1,12 +1,34 @@
 import * as tf from '@tensorflow/tfjs';
+import { debug } from './getAiMove';
 
-export async function testTensor2() {
-  console.log('testTensor2 start');
+let model = null; //tf.sequential();
 
-  // TODO: Step1: train.
+console.log('load tensor');;
 
+async function testTensorflowTrain() {
+  console.log('start tensorflow train');
+
+  setModel();
+  const trainXSet = [];
+  // const trainYSet = [];
+  const trainYSet = [];
+
+  const x = [0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  trainXSet.push(x);
+  // const rawY = [0, 0, 0, 0, 0, 0, 0, 0, 1];
+  const y = wrapLabelData(8, 1);
+  trainYSet.push(y);
+  await trainData(trainXSet, trainYSet);
+
+  console.log('end train');
+
+  const p = getPrediction(x);
+  console.log('p:', p);
+}
+
+export function setModel() {
   // 18 ->9 -> 9
-  const model = tf.sequential();
+  model = tf.sequential();
 
   // 18, 9
   model.add(tf.layers.dense({units: 9, activation: 'relu', inputShape: [18]}));
@@ -20,31 +42,48 @@ export async function testTensor2() {
     loss: 'categoricalCrossentropy',
     metrics: ['accuracy'], //<- optional
   });
+}
+
+
+export function wrapLabelData(index, value) {
+  const target = Array(9).fill(0);
+  target[index]=value;
+  return target;
+  // if (batchY) {
+  //   batchY.push(target);
+  // }
+}
+
+export async function trainData(batchX, batchY) {
+  debug.log('trainData start');
+
+  // Step1: train.
 
   // iris ref:
   // https://github.com/tensorflow/tfjs-examples/blob/master/iris/index.js
   // input: xTrain, yTrain, xTest, yTest
-  //TODO convert them to Tensorflow format
-  const x = [[0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]];//one set
-  const y = [[0, 0, 0, 0, 0, 0, 0, 0, 1]];
-  const xTrain = tf.tensor2d(x, [1, 18]); // 1 set, 18 inputs (neurons)
-  const yTrain = tf.tensor2d(y, [1, 9]);
+  // [Done] TODO convert them to Tensorflow format
+  // const x = [[0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]];//one set
+  // const y = [[0, 0, 0, 0, 0, 0, 0, 0, 1]];
+  const xTrain = tf.tensor2d(batchX, [batchX.length, 18]); // 1 set, 18 inputs (neurons)
+  const yTrain = tf.tensor2d(batchY, [batchY.length, 9]);
 
-  const lossValues = [];
-  const accuracyValues = [];
+  // const lossValues = [];
+  // const accuracyValues = [];
 
   // Call `model.fit` to train the model.
   // const history = await = model.fit
   // const loss = history.history.loss[0];
   // const accuracy = history.history.acc[0];
-  const his = await model.fit(xTrain, yTrain, {
-    //batchSize: BATCH_SIZE ?? <- use the size of xTrain, fixed嗎?
+  const history = await model.fit(xTrain, yTrain, {
+    // batchSize (number): Number of samples per gradient update. If unspecified, it will default to 32. Optional
     epochs: 1, //params.epochs, //iris, default 40, use epoch as batch
     // validationData: [xTest, yTest], 不提供會沒有logs.val_loss, logs.val_acc
     callbacks: {
       onEpochEnd: (epoch, logs) => {
 
-        console.log('onEpochEnd, logs:', logs); // logs.loss, logs.acc
+        // console.log('onEpochEnd, logs:', logs); // logs.loss, logs.acc
+
         // console.log('test predict2');
         // model.predict(xTrain).print();
         // // Plot the loss and accuracy values at the end of every training epoch.
@@ -56,7 +95,8 @@ export async function testTensor2() {
       },
     }
   });
-  console.log('history:', his);
+
+  debug.log('history:', history);
 
   // const loss = his.history.loss[0]; 2.38
   // const accuracy = history.history.acc[0]; 0
@@ -64,12 +104,10 @@ export async function testTensor2() {
 
   // await tf.nextFrame(); iris跟mnist都有加 !!!!?
 
-  // console.log('Model training complete.');
+  debug.log('Model training complete.');
   // ui.status('Model training complete.');
 
-  // TODO:  2. Try to test prediction
-  console.log('test predict');
-  model.predict(xTrain).print();
+
 
   // await tf.nextFrame(); 要求強制重畫, 如果有排程plot的話
 
@@ -82,10 +120,25 @@ export async function testTensor2() {
   // This is simply a sugar method so that users can do the following: await tf.nextFrame();
 }
 
+export function getPrediction(input){
+  // console.log('getPrediction');
+  const x = tf.tensor2d([input], [1, 18]); // 1 set, 18 inputs (neurons)
+  const pre = model.predict(x);
+
+  // pre.print(); // information
+
+  // dataSync return TypedArray, e.g. [out1, out2],
+  const data = pre.dataSync(); //這裡變成一維的, 可能是因為[output]會自動變成output吧
+
+  // console.log('getPrediction end:', data);
+  const data2 = Array.from(data);
+  // console.log('getPrediction end2:', data2);
+  return data2;
+}
 
 export function testTensor() {
 
-  console.log('testTensor1');
+  console.log('testTensor start');
   // Define a model for linear regression.
   const model = tf.sequential();
   model.add(tf.layers.dense({units: 1, inputShape: [1]}));
@@ -103,6 +156,6 @@ export function testTensor() {
     model.predict(tf.tensor2d([5], [1, 1])).print();
   });
 
-  console.log('testTensor2');
+  console.log('testTensor end');
 
 }
