@@ -6,3 +6,8 @@ exports.modifyWebpackConfig = ({ config, stage }) => {
     config.plugin('Lodash', webpackLodashPlugin, null);
   }
 };
+
+exports.modifyBabelrc = ({ babelrc }) => ({
+  ...babelrc,
+  plugins: babelrc.plugins.concat(['transform-decorators-legacy', 'transform-regenerator', 'transform-runtime']),
+});
