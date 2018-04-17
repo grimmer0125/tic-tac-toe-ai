@@ -1,6 +1,6 @@
 import * as tf from '@tensorflow/tfjs';
 
-export function testTensor2() {
+export async function testTensor2() {
   console.log('testTensor2 start');
 
   // TODO: Step1: train.
@@ -37,14 +37,16 @@ export function testTensor2() {
   // const history = await = model.fit
   // const loss = history.history.loss[0];
   // const accuracy = history.history.acc[0];
-  model.fit(xTrain, yTrain, {
+  const his = await model.fit(xTrain, yTrain, {
     //batchSize: BATCH_SIZE ?? <- use the size of xTrain, fixed嗎?
     epochs: 1, //params.epochs, //iris, default 40, use epoch as batch
-    // validationData: [xTest, yTest],
+    // validationData: [xTest, yTest], 不提供會沒有logs.val_loss, logs.val_acc
     callbacks: {
       onEpochEnd: (epoch, logs) => {
 
-        console.log('onEpochEnd');
+        console.log('onEpochEnd, logs:', logs); // logs.loss, logs.acc
+        // console.log('test predict2');
+        // model.predict(xTrain).print();
         // // Plot the loss and accuracy values at the end of every training epoch.
         // ui.plotLosses(lossValues, epoch, logs.loss, logs.val_loss);
         // ui.plotAccuracies(accuracyValues, epoch, logs.acc, logs.val_acc);
@@ -54,6 +56,13 @@ export function testTensor2() {
       },
     }
   });
+  console.log('history:', his);
+
+  // const loss = his.history.loss[0]; 2.38
+  // const accuracy = history.history.acc[0]; 0
+  // console.log('loss:', loss);
+
+  // await tf.nextFrame(); iris跟mnist都有加 !!!!?
 
   // console.log('Model training complete.');
   // ui.status('Model training complete.');
@@ -61,9 +70,16 @@ export function testTensor2() {
   // TODO:  2. Try to test prediction
   console.log('test predict');
   model.predict(xTrain).print();
+
+  // await tf.nextFrame(); 要求強制重畫, 如果有排程plot的話
+
   // Tensor
   //    [[0.0956943, 0.1175393, 0.117693, 0.1122482, 0.1017766, 0.1322675, 0.1082607, 0.1118177, 0.1027028],]
 
+  // tf.nextFrame () function source
+  // Returns a promise that resolve when a requestAnimationFrame has completed.
+  //
+  // This is simply a sugar method so that users can do the following: await tf.nextFrame();
 }
 
 
