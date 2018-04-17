@@ -9,6 +9,7 @@ import Canvas from './Canvas';
 import AiIcon from 'react-icons/lib/md/phone-android';
 import UserIcon from 'react-icons/lib/md/person';
 import { FormattedMessage } from 'react-intl';
+import Btn from '../Btn';
 
 const Section = styled.section`
   display: flex;
@@ -87,8 +88,14 @@ class Game extends React.PureComponent {
         />
         <div>
           <NewGameBtn newGame={this.props.newGame} />
-          <button onClick={this.startTrain}>Start train</button>
-          <button onClick={this.startValidate}>Start validate</button>
+          <div style={{display: 'flex', justifyContent: 'space-around', margin: 10}}>
+            <div>
+              <Btn onClick={this.startTrain}>Self-Play Train</Btn>
+            </div>
+            <div>
+              <Btn onClick={this.startValidate}>Validate</Btn>
+            </div>
+          </div>
 
         </div>
       </Section>
