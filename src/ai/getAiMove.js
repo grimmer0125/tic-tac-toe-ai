@@ -81,6 +81,9 @@ export function startValidation() {
   console.log('start validation');
   startTrainOrValidation(numberOfTraing, false);
   console.log('end validation');
+  const exported = net.toJSON();
+  console.log('print exported network as json data:\n');
+  console.log(JSON.stringify(exported));
 
 }
 
@@ -88,7 +91,6 @@ export const startTrain = () => {
   console.log('start train');
   startTrainOrValidation(numberOfTraing, true);
   console.log('end train');
-
 };
 
 export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
@@ -106,7 +108,9 @@ export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
 
   startTime = new Date();
   for (let i=0; i< numberOfRounds; i++) {
-    console.log('Round:'+(i+1).toString());
+    if (i%1000==0) {
+      console.log('Round:'+(i+1).toString());
+    }
     // console.log('start user+ai run');
 
     if(uiGameObj.isAiTurn) {
@@ -166,7 +170,7 @@ export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
           // return oldGame;
         }
         if (gameAfterMove.ended) {
-          console.log('final:ai. auto start1- new game');
+          debug.log('final:ai. auto start1- new game');
 
           const oldScore = uiGameObj.score.ai;
           const newScore = gameAfterMove.score.ai;
@@ -198,7 +202,7 @@ export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
           return;
         }
         if (gameAfterMove.ended) {
-          console.log('final:user. auto start new game');
+          debug.log('final:user. auto start new game');
           // console.log('final board:', getBoardArray(uiGameObj));
 
           const oldScore = uiGameObj.score.human;
@@ -224,7 +228,7 @@ export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
     //** Start training
     // momentQueue.push({gameMoment, nextStep});
     if (ifTrain) {
-      console.log('train this round, ai steps:', momentQueue.length);
+      debug.log('train this round, ai steps:', momentQueue.length);
       // console.log('momentQueue:', momentQueue);
 
       for ( const moment of momentQueue) {
@@ -271,7 +275,7 @@ export const startTrainOrValidation = (numberOfRounds, ifTrain) => {
   timeDiff /= 1000;
   // get seconds
   var seconds = Math.round(timeDiff);
-  console.log('train time:', seconds + ' seconds');
+  console.log('execute time:', seconds + ' seconds');
 
   console.log('total rounds:', numberOfRounds, ';score:', uiGameObj.score);
   console.log('average invalid per:', totalInvalid/numberOfRounds);
