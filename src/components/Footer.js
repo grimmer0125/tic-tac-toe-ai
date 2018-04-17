@@ -20,7 +20,7 @@ const Link = styled(A)`
   line-height: 1.5;
   border-radius: ${props => props.theme.borderRadius};
   transition: 0.3s;
-  
+
   &:hover {
     background-color: ${props => props.theme.colors.blackShades[0]};
     transition: 0.3s;
@@ -29,7 +29,7 @@ const Link = styled(A)`
 
 const FooterSection = styled.section`
   text-align: center;
-  
+
   span {
     font-weight: bold;
   }
@@ -62,13 +62,13 @@ const getCreatedBy = (author) => {
   return {
     en: (
       <FooterSection>
-        <Link href={author.defaultLink} target="_blank">
+        {/* <Link href={author.defaultLink} target="_blank">
           {profilePicture}
           {'Built with '} <HeartIcon />
           {' by '} <span>{author.name}</span>
           {' who lives in '} <span>{author.homeCity}</span>
           <HomeCountryIcon />
-        </Link>
+        </Link> */}
       </FooterSection>
     ),
     pt: (

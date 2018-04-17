@@ -2,7 +2,7 @@
   "name": "tic-tac-toe-ai",
   "description": "Implementing neural networks to learn how to play tic tac toe",
   "version": "0.0.1",
-  "author": "Angelo Ocana <angeloocana@gmail.com>",
+  "author": "",
   "dependencies": {
     "deepcopy": "^0.6.3",
     "gatsby": "^1.9.55",
