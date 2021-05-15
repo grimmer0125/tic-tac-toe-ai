@@ -5,6 +5,8 @@ let model = null; //tf.sequential();
 
 console.log('load tensor');;
 
+const numberOfInput2ndlayer = 50;
+
 async function testTensorflowTrain() {
   console.log('start tensorflow train');
 
@@ -31,7 +33,7 @@ export function setModel() {
   model = tf.sequential();
 
   // 18, 9
-  model.add(tf.layers.dense({units: 9, activation: 'relu', inputShape: [18]}));
+  model.add(tf.layers.dense({units: numberOfInput2ndlayer, activation: 'relu', inputShape: [18]}));
 
   //->9
   model.add(tf.layers.dense({units: 9, activation: 'softmax'}));
@@ -57,6 +59,7 @@ export function wrapLabelData(index, value) {
 export async function trainData(batchX, batchY) {
   debug.log('trainData start');
 
+
   // Step1: train.
 
   // iris ref:
@@ -76,7 +79,7 @@ export async function trainData(batchX, batchY) {
   // const loss = history.history.loss[0];
   // const accuracy = history.history.acc[0];
   const history = await model.fit(xTrain, yTrain, {
-    // batchSize (number): Number of samples per gradient update. If unspecified, it will default to 32. Optional
+    batchSize: batchX.length, // (number): Number of samples per gradient update. If unspecified, it will default to 32. Optional
     epochs: 1, //params.epochs, //iris, default 40, use epoch as batch
     // validationData: [xTest, yTest], 不提供會沒有logs.val_loss, logs.val_acc
     callbacks: {

@@ -80,7 +80,7 @@ const propagate2 = (net, learningRate, index, value) => {
 
 
 
-const numberOfTraing = 5*10000;
+const numberOfTraing = 40000;
 
 export function startValidation() {
   console.log('start validation');
@@ -117,7 +117,7 @@ export const startTrainOrValidation = async (numberOfRounds, ifTrain) => {
 
   startTime = new Date();
   for (let i=0; i< numberOfRounds; i++) {
-    if (i%1000==0) {
+    if (i%100==0) {
       console.log('Round:'+(i+1).toString());
     }
     // console.log('start user+ai run');
@@ -248,13 +248,13 @@ export const startTrainOrValidation = async (numberOfRounds, ifTrain) => {
         const {gameMoment, nextStep} = moment;
         const input = getInputLayer(gameMoment.board);
 
-        trainXSet.push(input);
         // net.activate(input);
 
         let value;
         if(ifUserWin) {
           debug.log('train ai lose');
           value = -1;
+          // continue;
           // propagate2(net, learningRates.lost, nextStep, -1);
         } else if (ifAIWin){
           debug.log('train ai win');
@@ -263,8 +263,10 @@ export const startTrainOrValidation = async (numberOfRounds, ifTrain) => {
         } else {
           debug.log('train a draw');
           value = 0;
+          // continue;
           // propagate2(net, learningRates.validMove, nextStep, 0);
         }
+        trainXSet.push(input);
         trainYSet.push(tensor.wrapLabelData(nextStep, value));
       }
 
